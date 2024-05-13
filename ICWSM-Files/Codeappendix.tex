@@ -1,0 +1,338 @@
+The project is hosted on github and has the following key folders and files. The key folders include "src" for source code of the models and the baseline models, "docs" for documentation, and "data" for the preprocessed datasets. In addition to the key folders, there are also other important files in the project. These files include "README.md" which provides an overview of the project, "LICENSE" which specifies the terms of use, and "requirements.txt" which lists the necessary dependencies for running the code.  Additionally, there is a "config" folder for configuration files and a "lib" folder for external libraries used in the project. 
+
+\begin{listing}[htb]%
+\caption{To run the knowledge embedding model {\tt train\_MMBT\_conceptnet\_cuda.py}}%
+\label{lst:listing}%
+\begin{lstlisting}[language=Haskell]
+python train_MMBT_Conceptnet_Cuda.py    
+        --batch_sz 16  
+        --gradient_accumulation_steps 40 
+        --savedir test 
+        --name mmbt_model_run 
+        --data_path \path\to\data\folder
+        --model mmbt 
+        --max_epochs 50
+\end{lstlisting}
+\end{listing}
+
+
+\begin{listing}[htb]%
+\caption{To run the BLIP model {\tt train\_BLIP.py}}%
+\label{lst:listing}%
+\begin{lstlisting}[language=Haskell]
+python train_BLIP.py    
+        --batch_sz 16  
+        --gradient_accumulation_steps 40 
+        --savedir test 
+        --name mmbt_model_run 
+        --data_path \path\to\data\folder
+        --model mmbt 
+        --max_epochs 50
+\end{lstlisting}
+\end{listing}
+
+\begin{listing}[htb]%
+\caption{To run the baseline MMBT model {\tt train\_MMBT\_cuda.py}}%
+\label{lst:listing}%
+\begin{lstlisting}[language=Haskell]
+python train_MMBT_Cuda.py    
+        --batch_sz 16  
+        --gradient_accumulation_steps 40 
+        --savedir test 
+        --name mmbt_model_run 
+        --data_path \path\to\data\folder
+        --model mmbt 
+        --max_epochs 50
+\end{lstlisting}
+\end{listing}
+
+% \begin{listing}[htb]%
+% \caption{To run the baseline MMBT model {\tt train\_MMBT\_cuda.py}}%
+% \label{lst:listing}%
+% \begin{lstlisting}[language=Haskell]
+% python train_MMBT_Cuda.py    
+%         --batch_sz 16  
+%         --gradient_accumulation_steps 40 
+%         --savedir test 
+%         --name mmbt_model_run 
+%         --data_path \path\to\data\folder
+%         --model mmbt 
+%         --max_epochs 50
+% \end{lstlisting}
+% \end{listing}
+
+
+\begin{table*}[hbt]
+\centering
+\begin{tabular}{|p{6cm}|p{12cm}|}
+\hline
+\textbf{Python Command Arguments} & \textbf{Explanation} \\
+\hline
+\texttt{--batch-size} & This sets the batch size to 32, indicating the number of samples that will be processed together in each iteration of training. \\
+\hline
+\texttt{--img-hidden-size} & This parameter sets the size of the hidden representation for image features \\
+\hline
+\texttt{--gradient-accumulation-steps} & This parameter controls how many batches are accumulated before the gradients are updated, which can be helpful when training with limited GPU memory. \\
+\hline
+\texttt{--savedir} & This sets the directory where the trained model checkpoints and other outputs will be saved. In this case, the directory is named "test".\\
+\hline
+\texttt{--name} & This provides a name for the run or experiment. The trained model and related files might be prefixed or organized using this name. \\
+\hline
+\texttt{--data-path} & This specifies the path to the data used for training. It should be something like \texttt{--data-path /path/to/your/data.} \\
+\hline
+\texttt{--model} & This provides a name for the run or experiment. The trained model and related files might be prefixed or organized using this name. \\
+\hline
+\texttt{--num-image-embeds } & This parameter sets the number of image embeddings used in the model. It's not entirely clear without context what "197" refers to, but it could be the number of images in your dataset or some other application-specific value. \\
+\hline
+\texttt{--freeze-txt} & This parameter specifies how many layers of the text-based component (BERT) will be frozen during training. In this case, the first 5 layers will be frozen, and the remaining layers will be fine-tuned. \\
+\hline
+\texttt{--freeze-img} & Similarly to --freeze-txt, this parameter specifies how many layers of the image-based component (ViT) will be frozen during training. In this case, the first 3 layers will be frozen.\\
+\hline
+\texttt{--max-epochs} & This sets the maximum number of training epochs to 50, which defines how many times the entire dataset will be used to update the model's weights during training. \\
+\hline
+\end{tabular}
+\caption{Python Command Arguments and Explanations}
+\label{tab:python-arguments}
+\end{table*}
+
+Keep in mind that the success of this training heavily depends on the context of your application, the quality and size of your dataset, and the specifics of the MMBT-ViT-BERT architecture implementation. Also, please ensure that you have all the necessary dependencies installed and that the paths and other settings are correctly specified for your setup.
+
+
+
+\begin{listing}%
+\caption{Code snippet illustrating the multimodal architecture}%
+\label{lst:listing}%
+\begin{lstlisting}[language=Haskell]
+import torch
+import torch.nn as nn
+from transformers import BertModel, ViTFeatureExtractor, ViTModel
+
+class ImageEncoder(nn.Module):
+    def __init__(self, args):
+        super(ImageEncoder, self).__init__()
+        self.args = args
+        model = torchvision.models.resnet152(pretrained=True)
+        modules = list(model.children())[:-2]
+        self.model = nn.Sequential(*modules)
+
+        pool_func = (
+            nn.AdaptiveAvgPool2d
+            if args.img_embed_pool_type == "avg"
+            else nn.AdaptiveMaxPool2d
+        )
+
+        if args.num_image_embeds in [1, 2, 3, 5, 7]:
+            self.pool = pool_func((args.num_image_embeds, 1))
+        elif args.num_image_embeds == 4:
+            self.pool = pool_func((2, 2))
+        elif args.num_image_embeds == 6:
+            self.pool = pool_func((3, 2))
+        elif args.num_image_embeds == 8:
+            self.pool = pool_func((4, 2))
+        elif args.num_image_embeds == 9:
+            self.pool = pool_func((3, 3))
+
+    def forward(self, x):
+        # Bx3x224x224 -> Bx2048x7x7 -> Bx2048xN -> BxNx2048
+        out = self.pool(self.model(x))
+        out = torch.flatten(out, start_dim=2)
+        out = out.transpose(1, 2).contiguous()
+        return out  # BxNx2048
+
+\end{lstlisting}
+\end{listing}
+
+\begin{listing}%
+\caption{Code snippet illustrating the multimodal architecture}%
+\label{lst:listing}%
+\begin{lstlisting}[language=Haskell]
+
+class VisionTransformerEncoder(nn.Module):
+    def __init__(self, args):
+        super(VisionTransformerEncoder, self).__init__()
+        # pass
+        self.l1 = ViTModel.from_pretrained("google/vit-base-patch16-224-in21k")
+        self.n_classes = args.n_classes  # number of classes for my dataset
+        self.vit_embd_dim = args.img_hidden_sz
+        self.pre_classifier = torch.nn.Linear(self.vit_embd_dim, 256)
+        self.dropout = torch.nn.Dropout(0.3)
+        self.classifier = nn.Linear(256, self.n_classes)
+
+    def forward(self, data):
+        output_ = self.l1(data)
+        hidden_state = output_[0]
+        return hidden_state  # Bx3x224x224 -> BxNx786
+
+\end{lstlisting}
+\end{listing}
+
+\begin{listing}%
+\caption{Code snippet illustrating generation of bert style embeddings from image embeddings}%
+\label{lst:listing}%
+\begin{lstlisting}[language=Haskell]
+class ImageBertEmbeddings(nn.Module):
+    def __init__(self, args, embeddings):
+        super(ImageBertEmbeddings, self).__init__()
+        self.args = args
+        self.img_embeddings = nn.Linear(args.img_hidden_sz, args.hidden_sz)
+        self.position_embeddings = embeddings.position_embeddings
+        self.token_type_embeddings = embeddings.token_type_embeddings
+        self.word_embeddings = embeddings.word_embeddings
+        self.LayerNorm = embeddings.LayerNorm
+        self.dropout = nn.Dropout(p=args.dropout)
+
+    def forward(self, input_imgs, token_type_ids):
+        bsz = input_imgs.size(0)
+        seq_length = self.args.num_image_embeds + 2  # +2 for CLS and SEP Token
+        cls_id = torch.LongTensor([self.args.vocab.stoi["[CLS]"]]).cuda()
+        cls_id = cls_id.unsqueeze(0).expand(bsz, 1)
+        cls_token_embeds = self.word_embeddings(cls_id)
+        sep_id = torch.LongTensor([self.args.vocab.stoi["[SEP]"]]).cuda()
+        sep_id = sep_id.unsqueeze(0).expand(bsz, 1)
+        sep_token_embeds = self.word_embeddings(sep_id)
+        imgs_embeddings = self.img_embeddings(input_imgs)
+        token_embeddings = torch.cat(
+            [cls_token_embeds, imgs_embeddings, sep_token_embeds], dim=1
+        )
+        position_ids = torch.arange(seq_length, dtype=torch.long).cuda()
+        position_ids = position_ids.unsqueeze(0).expand(bsz, seq_length)
+        position_embeddings = self.position_embeddings(position_ids)
+        token_type_embeddings = self.token_type_embeddings(token_type_ids)
+        embeddings = token_embeddings + position_embeddings + token_type_embeddings
+        embeddings = self.LayerNorm(embeddings)
+        embeddings = self.dropout(embeddings)
+        return embeddings
+
+\end{lstlisting}
+\end{listing}
+
+\begin{listing}%
+\caption{Code snippet illustrating generating MultiModal Bert Embeddings}%
+\label{lst:listing}%
+\begin{lstlisting}[language=Haskell]
+class MultimodalBertEncoder(nn.Module):
+    def __init__(self, args):
+        super(MultimodalBertEncoder, self).__init__()
+        self.args = args
+        model_config = BertConfig.from_pretrained(args.bert_model, output_hidden_states=True)
+        bert = BertModel.from_pretrained(args.bert_model, config=model_config)
+        self.txt_embeddings = bert.embeddings
+        self.img_embeddings = ImageBertEmbeddings(args, self.txt_embeddings)
+        self.vit_encoder = VisionTransformerEncoder(args)
+        self.encoder = bert.encoder
+        self.pooler = bert.pooler
+        self.clf = nn.Linear(args.hidden_sz, args.n_classes)
+
+    def forward(self, input_txt, attention_mask, segment, input_img):
+        bsz = input_txt.size(0)
+        attention_mask = torch.cat(
+            [
+                torch.ones(bsz, self.args.num_image_embeds + 2).long().cuda(),
+                attention_mask,
+            ],
+            dim=1,
+        )
+        extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
+        extended_attention_mask = extended_attention_mask.to(
+            dtype=next(self.parameters()).dtype
+        )
+        extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
+        img_tok = (
+            torch.LongTensor(input_txt.size(0), self.args.num_image_embeds + 2)
+            .fill_(0)
+            .cuda()
+        )
+        img = self.vit_encoder(input_img)  # BxNx3x224x224 -> BxNx786
+        img_embed_out = self.img_embeddings(img, img_tok)
+        txt_embed_out = self.txt_embeddings(input_txt, segment)
+        encoder_input = torch.cat([img_embed_out, txt_embed_out], 1)
+        encoded_layers = self.encoder(encoder_input, extended_attention_mask)
+        return self.pooler(encoded_layers[-1])
+
+\end{lstlisting}
+\end{listing}
+
+\begin{listing}%
+\caption{Code snippet illustrating Attention fusion}%
+\label{lst:listing}%
+\begin{lstlisting}[language=Haskell]
+
+class AttentionFusion(object):
+    def __init__(self, input_dim, num_heads):
+        self.attention_layer = torch.nn.MultiheadAttention(input_dim, num_heads)
+
+    def __call__(self, text_embedding, knowledge_embedding):
+        # concat_dim_zero = torch.cat([list_tensors], dim=1)
+        attention_fused_tensors = self.attention_layer(text_embedding, knowledge_embedding,knowledge_embedding  need_weights=False)
+        return attention_fused_tensors
+
+        
+\end{lstlisting}
+\end{listing}
+
+
+\begin{listing}%
+\caption{Code snippet illustrating the multimodal classifier with Knowledge}%
+\label{lst:listing}%
+\begin{lstlisting}[language=Haskell]
+# @title MultiModal BERT Classifier Layer
+
+class MultimodalBertClf(nn.Module):
+    def __init__(self, args):
+        super(MultimodalBertClf, self).__init__()
+        self.args = args
+        self.enc = MultimodalBertEncoder(args)
+        self.linearlayer1 = nn.Linear(args.hidden_sz, 256)
+        self.act1 = nn.GELU()
+        self.linearlayer2 = nn.Linear(512, 256)
+        self.act2 = nn.GELU()
+        self.att_fusion_layer = AttentionFusion(256,4)
+        self.clf = nn.Linear(128, args.n_classes)
+
+    def forward(self, txt, mask, segment, img, concept_net_embeddings):
+        x = self.enc(txt, mask, segment, img)
+        x1 = concept_net_embeddings
+        x = self.linearlayer1(x)
+        x = self.act1(x)
+        x = self.att_fusion_layer(x,x1)
+        return self.clf(x
+
+\end{lstlisting}
+\end{listing}
+
+
+% \begin{listing}[htb]%
+% \caption{Training Configuration }%
+% \label{lst:listing}%
+% \begin{lstlisting}[language=Haskell]
+% # Code snippet showing training configuration
+% import argparse
+
+% parser = argparse.ArgumentParser(description='MMBT-ViT-BERT Training')
+% parser.add_argument('--batch_sz', type=int, default=32, help='Batch size for training')
+% parser.add_argument('--img_hidden_sz', type=int, default=768, help='Image feature hidden size')
+% # Add other relevant arguments here...
+
+% args = parser.parse_args()
+
+% # Training loop
+% for epoch in range(args.max_epochs):
+%     for batch_idx, (text_inputs, img_inputs, labels) in enumerate(train_dataloader):
+%         text_logits, img_logits = model(text_inputs, img_inputs)
+%         # Compute loss and update model parameters
+%         # Add backpropagation and optimizer steps here...
+% \end{lstlisting}
+% \end{listing}
+
+% \begin{listing}[htb]%
+% \caption{Code snippet for multimodal evaluation}%
+% \label{lst:listing}%
+% \begin{lstlisting}[language=Haskell]
+% model.eval()
+% with torch.no_grad():
+%     for text_inputs, img_inputs, labels in test_dataloader:
+%         text_logits, img_logits = model(text_inputs, img_inputs)
+%         # Compute evaluation metrics (accuracy, etc.)
+%         # Add evaluation metrics calculation here...
+% \end{lstlisting}
+% \end{listing}

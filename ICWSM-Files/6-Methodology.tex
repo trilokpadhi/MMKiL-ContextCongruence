@@ -1,0 +1,166 @@
+% Marketers use different strategies to attract and retain customers for their various marketing campaigns. In Doing so, they use different styles and add various information to the marketing captions and images and sometimes the information conveyed in images and text are complementary and they try to convey different stories which leads to a huge modality gap \cite{Zhang2018-tq}. Large Language models which are trained on web scrapped datasets do not capture world knowledge \cite{Rogers2020-eh}. This  often leads to the failure of these models to efficiently learn a multimodal representation to capture the true meaning of the content. 
+
+%In this study, w
+%We develop models that 
+As shown in Figure \ref{fig:architecture}, our models incorporate external knowledge from a KG (e.g., ConceptNet) in a multimodal learning framework, to predict the success of a marketing campaign. We formulate this 
+%problem 
+as a binary classification task. We use a supervised multimodal learning framework \cite{kiela2020supervised} to generate a multimodal representation. We devise a knowledge retrieval component that extracts the most relevant concepts from ConceptNet and generates their knowledge representations. For knowledge representations, we trained Knowledge Graph Embedding (KGE) models as described in the Section for Knowledge Retrieval and Representation. Then, we fuse the multimodal representation with the knowledge representation to obtain a knowledge-infused representation that is input to the classification layer. 
+
+\paragraph{Baselines.} We compared our approach with five different 
+%competitive 
+baselines. We used two baseline approaches from recent literature, MDL-TIM \cite{cheng2019success} and BLIP \cite{Li2022-ni}. In addition, we used \cite{kiela2020supervised} as-is as another baseline model. Then, we created two more baselines that are variants of \cite{kiela2020supervised} by changing the encoders. 
+% Multi Interactive Memory Network was developed for social media sentiment classification \cite{xu2019multi}. It includes two interactive memory networks to supervise the textual and visual information to learn the cross-modal interactions and self-influences in a single modality of the data. 
+
+
+\subsection{Problem Formulation}
+Our dataset contains data points  ($d_i$) consisting of pairs of image ($v_i$) and text ($t_i$) with binary labels ($a_i$); $d_i = {(v_i,t_i,a_i)}$ for $i=1...n$.
+% ($a_i$); $d_i = {{(v_i,t_i,a_i)}^s}_{i=1}$
+%, where $v_i$ represent the $i^{th}$ marketing image, $t_i$ represent the $i^{th}$ marketing caption of the image and $a_i$ represents its target, if the campaign was successful or not, if funded it's represented by $a_i = 1$ else $a_i = 0$
+Our target classification feature is %determined 
+based on whether a campaign is successful; in other words, whether it has reached its funding goal within a given timeline.
+%binary response variable representing whether the project is funded or not funded. If a campaign achieves its target within the timeline, its successful and funded. 
+Hence, our problem is to determine how likely a given marketing campaign with multimodal content (e.g., text, image) on a crowdfunding platform will be successful.
+%by capturing contextual connections through the incorporation of knowledge representation in multimodal learning. 
+We denote the knowledge graph as $K_g$ and the set of concepts as $C = {\{c_1, c_2, c_3, ....., c_n\}}$.
+% Provide some examples for these concepts.
+
+
+\subsection{Multimodal Learning}
+\label{mmbt-kil-model}
+Given each pair of image and text ($v_i,t_i$), we follow \cite{kiela2020supervised}, 
+%to learn a multimodal representation 
+because of the modular and flexible framework as the text and image encoders can be replaced and fine-tuned. Specifically, we jointly fine-tune the pretrained text (e.g., BERT, RoBERTa) and image encoders (e.g., ViT, ResNet) 
+%that we experiment with over our dataset, 
+using a bidirectional transformer. We initialize the bidirectional transformers with the fine-tuned text encoders and learn weights $W_n \in \mathbf{R}^{P\times D}$ to map each image ($v_i$) embedding to the token input embedding space. 
+% These multimodal embeddings and the knowledge embeddings are concatenated and then a joint representation is learned in the multi-head cross attention fusion layer. The model is trained with a cross-entropy loss.
+
+\paragraph{Vision Encoder.}
+\label{vision-encoder}
+%The last fully connected layer of a pre-trained convolutional neural network is often used in computer vision \cite{azizpour2014cnn}, where the output comes from a pooling operation over feature maps. 
+% We examine the impact of having the pooling generate N different picture embeddings as opposed to a single output vector, which is different from a traditional convolutional neural network. In this instance, w
+We experiment with two types of vision encoders: ResNet-152 \cite{he2015deep} and Vision Transformers \cite{dosovitskiy2021image} model with average pooling over \begin{math} K \times M \end{math} grids in the picture, producing \begin{math} N = KM \end{math} output vectors with a total of 2048 dimensions for each image. As suggested in \cite{kiela2020supervised}, we resized, center-cropped, and normalized the images.
+
+
+% \paragraph{Text Encoder.}
+% \label{text-encoder}
+
+% For text, we experiment with base-uncased BERT \cite{devlin2018bert} and RoBERTa \cite{liu2019roberta} as this framework is based on bitransformers. When providing input to the architecture, contextual embeddings are used. Each contextual embedding is created by adding together distinct D-dimensional segments, location, and token embeddings. We learn weights $W_n \in \mathbf{R}^{P\times D}$ to project each of the $N$ image embeddings to $D$ dimensional token input embedding space: 
+
+% \begin{equation}
+%     I_n = W_nf(img,n)
+% \end{equation}
+
+% where $f(·, n)$ is the \textit{n}-th output of the image encoder’s final pooling operation. We use 0-indexed positional coding, i.e., we start counting from 0, for each segment. 
+
+
+
+\subsection{Knowledge Retrieval and Representation}
+\label{sec:explicit-knowledge}
+% Multimodal marketing content often has rich complementary information across modalities 
+%that are complementary to each other and 
+% The implicit knowledge in pretrained models fails to capture these nuances. 
+%Common Sense KGs express real-world truth.  
+For knowledge retrieval, we generated a text caption for images using multimodal LVMs. 
+%We found that 
+BLIP \cite{li2022blip} performs better than
+%compared to 
+other models and is sufficiently accurate in representing the image content. The text and the generated caption of the image are combined and input into the semantic search module. For semantic search, we utilize Sentence-BERT \cite{reimers2019sentence} 
+%for its design 
+to search efficiently and find the most semantically meaningful matches (e.g., $top-k$) between  KG concepts and content input. Sentence-BERT was trained with a regression objective function (e.g., mean squared error) and a siamese network architecture over a sizable natural language inference (NLI) data, which enables efficient inference and semantic search capabilities. 
+%As per 
+Due to its comprehensive coverage of commonsense knowledge, we use ConceptNet \cite{speer2018conceptnet} as our KG. In order to retrieve the most relevant concepts, Sentence-BERT computes the similarity scores, resulting in the $top-k$ concepts ($c_i$) that are potentially semantically similar to the input text and image caption pairs ($v_i,t_i$). In our experiments, we empirically selected $k= 10$. 
+%To define the similarity score between the pair of ${v_i,t_i}$  and the concept $C_i$, we use cosine similarity as a metric to rank the most related entities.
+
+% \begin{equation}
+% Cosine(x,y) = \frac{x \cdot y}{|x||y|}    
+% \end{equation}
+
+% These concepts represent the concept set $C_{Vi}$ and $C_{ti}$ that represent each modality from the knowledge graph. We retrieve the top k knowledge entries relevant to the image and text. These top entities retrieved are represented by ${C_i}^k$. 
+As we obtain the most relevant concepts from ConceptNet, we input them into the KG embedding models that we trained over ConceptNet (see Section Knowledge Embedding Models in Appendix) to generate knowledge representations. In our experiments, we use three KG embedding models: TransE \cite{bordes2013translating}, RotatE \cite{sun2019rotate}, and Distmult \cite{Yang2014-yd}. Note that these KG embeddings capture the overall structure of the graph surrounding the concept of interest, which mainly contributes to the meaning. The generated KG embeddings are 256 dimensions. 
+% \begin{math}
+%     x_{know} :\in \mathbb{R}^{256}
+% \end{math} 
+Then, the knowledge representations are fused with the multimodal representations in the fusion module. 
+
+
+% \subsection{Implicit Knowledge Retrieval}
+% \label{implicit-knowledge}
+% Large Vision-Language Models (VLMs) contain a massive reservoir of implicit information already embedded in the parameters because they are trained on enormous web-scraped data sets. \cite{talmor2020leap,brown2020language,li2022blip}. In order to create captions that accurately capture the implicit context of a picture, BLIP employs an image-ground text encoder and decoder. For each image-question pair, we also generate a caption $c_i$ that describes the content in the image. This text is fed as an input to the Retrieval Module $R$ of the MMBT-KIL to retrieve the most relevant concepts.
+
+
+\paragraph{Knowledge Fusion.}
+\label{knowledge-fusion-layer}
+% KGs, as opposed to linguistic resources such as WordNet, contain general and factual data knowledge regarding the real world. 
+% To integrate the knowledge in KGs into deep learning models \cite{Kursuncu2019-ha} had proposed Deep Knowledge Infused Learning where the knowledge concepts are infused by constructing sub-seeded KGs and where the knowledge embedding $Ke$ is the representation learnt through a distance metric and fused with the model latent representation using a KG Fusion Layer. 
+We design a knowledge fusion layer
+%where we use 
+using a linear layer to project multimodal and knowledge representations to a common space to align dimensions. 
+%Various Knowledge Embedding models have been proposed which encode the entities and relationships in the Kg into a continuous low-dimensional vector representation. 
+%to see how the infusion of knowledge works across the type of embedding models.   
+As these representations may contain related information, we used a multi-head cross-attention layer to attend to significant parts of the input from the linear layer. Thus, we utilized multi-head cross-attention to fuse the two representations to learn a multimodal representation with knowledge. 
+
+% reference :- https://www.overleaf.com/learn/latex/Aligning_equations_with_amsmath#Displaying_long_equations
+% https://tex.stackexchange.com/questions/277234/gather-vs-aligned-centered-equation-with-one-number
+% Attention(Q, K, V) = softmax(\frac{QK^T}{\sqrt{d_k}})V
+\vspace{-1.2em}
+\begin{equation}
+\begin{gathered}
+    % \scriptstyle 
+    h_i = Attention(Q W^Q_i, K W^K_i, V W^V_i) \\ 
+    MultiHead(Q, K, V) = Concat(h_1, ..., h_h)W^O 
+\end{gathered} 
+\vspace{-0.5em}
+\label{eqn-attn}
+\end{equation}
+% where $\sqrt{d_k}$ is the dimension of the key vector $k$ and query vector $q$ .
+% To align the multimodal representation and entities from Concept set Vi and Vt, knowledge integration is done through a fusion layer. To map the representations in a unified space, the fusion layers learn a representation with cross entropy loss.
+
+\subsection{Implementation Details}
+\label{implementation-details}
+For all models, we swept over the learning rate in ($1e-4$, $5e-5$) with an early stop on validation accuracy for the datasets. The loss function was cross-entropy, and
+%For the BERT models, w
+we used BertAdam \cite{devlin2019google} with a warmup rate of 0.1. The BERT embedding dimension was $768$. The model was trained with a batch size of 16. The dataset was divided into training, validation, and test sets. The training dataset contained 45,810 samples, and validation and test sets consisted of 15,000 samples each.
+We used $Nvidia$ $Quadro$ $RTX$ $6000$ $GPU$.
+We trained the KG embedding models, TransE, Distmult and ComplexE with a learning rate $\lambda$ of  $0.001$ for the stochastic gradient descent, and the latent dimensions $k = 256$. The dissimilarity measure $d$ was set to $L^2$ distance. 
+% used star here, otherwise all images were getting overlaped
+
+
+
+\begin{table*}[hbt!]
+  \centerline{%
+    \begin{tabular}{p{0.5cm}p{2.6cm}p{3cm}p{1.9cm}p{1.4cm}p{1.4cm}p{1.4cm}p{1.4cm}}
+    \toprule[3pt]
+   \# & \textbf{Vision} & \textbf{Language} & \textbf{Knowledge} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{AUC} \\
+    \toprule[1pt]
+    1 & Resnet152 & \multicolumn{2}{l}{BERT \cite{kiela2020supervised} \space\space\space\space\space\space\space\space -} & 0.86 & 0.77 & 0.81 & 0.86 \\ 
+    2 & ViT & BERT & \centering - & 0.88 & 0.84 & 0.84 & 0.86 \\ 
+    3 & ViT & RoBERTa & \centering - & 0.92 & 0.88 & 0.91 & 0.91 \\ 
+    4 & \multicolumn{2}{c}{MDL-TIM \cite{cheng2019success}} & \centering - & 0.76 & 0.76 & 0.76 & 0.80 \\
+    % 5 & \multicolumn{2}{c}{MIMM \cite{xu2019multi}} & \centering - & 0.78 & 0.78 & 0.77 & 0.82 \\ %Multi Interactive Memory Network
+    5 & \multicolumn{2}{c}{BLIP \cite{li2022blip}} & \centering - & 0.93 & 0.89 & 0.91 & 0.92 \\
+    \toprule[1pt]
+    6 & ViT & RoBERTa & TransE  & 0.92 & 0.90 & 0.91 & 0.91\\ 
+    7 & ViT & RoBERTa & RotatE & 0.92 & 0.90 & 0.91 & 0.91\\
+    8 & ViT & RoBERTa & DistMult  & 0.91 & 0.89 & 0.91 & 0.90\\
+    9 & ViT & BERT & TransE & 0.92 & 0.85 & 0.89 & 0.90\\ 
+    10 & ViT & BERT & RotatE & 0.92 & 0.85 & 0.89 & 0.90\\
+    11 & ViT & BERT & DistMult & 0.92 & 0.86 & 0.89 & 0.91 \\
+    \rowcolor[gray]{.8}
+    12 & Resnet152 & RoBERTa & TransE  & 0.95 & 0.91 & 0.92 & 0.94\\ 
+    13 & Resnet152 & RoBERTa & RotatE & 0.93 & 0.92 & 0.92 & 0.93\\
+    14 & Resnet152 & RoBERTa & DistMult & 0.95 & 0.90 & 0.92 & 0.93\\
+    15 & Resnet152 & BERT & TransE & 0.93 & 0.89 & 0.91 & 0.93\\ 
+    16 & Resnet152 & BERT & RotatE & 0.94 & 0.89 & 0.92 & 0.93\\
+    17 & Resnet152 & BERT & DistMult  & 0.94 & 0.91 & 0.92 & 0.93\\
+
+    \bottomrule[3pt]
+    \end{tabular}%
+  }
+\vspace{-0.5em}
+\caption{ Results of the baseline models (\#1-5) and the Knowledge-infused multimodal models (\#6-17), with different text and image encoders and KG embedding models. }
+\vspace{-1.5em}
+\label{tab:results}
+\end{table*}
+
+
+

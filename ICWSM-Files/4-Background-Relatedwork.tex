@@ -1,0 +1,87 @@
+%Hence, w
+We provide background information and review prior work in the following three areas: multimodal vision and language models, knowledge infusion in multimodal learning, and modeling marketing campaigns. 
+
+\subsection{Multimodal Models (Vision and Language)}
+\label{sec:multimodal-transformers}
+
+% Pre-trained transformer-based unimodal models like BERT \cite{devlin2018bert}, ViT, Roberta, and 
+The most recent multimodal VLMs, including LLava \cite{liu2023visual}, GPT4 \cite{openai2023gpt4}, BLIP2 \cite{li2023blip}, BLIP \cite{li2022blip}, CLIP \cite{radford2021learning} have demonstrated significant outcomes in capturing content, albeit with certain limitations, such as hallucinations \cite{li2023evaluating,cirik2022holm}. Early VLMs including ViLBERT \cite{lu2019vilbert}, LXMERT \cite{tan2019lxmert}, and MMBT \cite{kiela2019supervised} introduced two-stream architectures using pretrained unimodal models to generate representations fused in later layers. Initial semiotically-oriented research explored text-image relations between 
+%text image relying on 
+words and objects 
+%(i.e., semiotics), 
+by attempting to construct the holistic congruent meaning of the pair \cite{wu2014multimodal,manning1998understanding}. %For these image-text relations, s
+Systems were proposed to identify and represent concepts in multimodal communications such as logico–semantic relations \cite{martinec2005system}. One taxonomy 
+%was also developed to 
+structurally represented these relationships utilizing cross-modal similarity \cite{marsh2003taxonomy}. As social media became prevalent, researchers created multimodal classifiers harnessing these text-image relations using a latent dirichlet allocation (LDA) model \cite{wang2014bilateral,chen2013understanding}.  
+%Recently, researchers have paid  more attention to the prediction of the cross-modal correlation categories. 
+More recently, researchers expanded the existing classification systems based on image specificity \cite{jas2015image}, emotion \cite{chen2015velda}, interrelation metrics \cite{henning2017estimating,otto2020characterization}, parallel and non-parallel \cite{zhang2018equal}, contextual and semiotic relations \cite{kruk2019integrating}, and the contribution of visual content \cite{vempala2019categorizing},  among other features. They used supervised learning to predict the \emph{cross-modal correlation} category using multimodal regression \cite{jas2015image} and multimodal classification \cite{chen2015velda,henning2017estimating,otto2020characterization,zhang2018equal,kruk2019integrating,vempala2019categorizing}. Despite the promising results of these predictive models, 
+%there are still 
+one persisting drawback 
+%persists  in the existing studies concerning 
+concerns the definition and classification of cross-modal correlation. As the existing definitions often include fine-grained relevant types of cross-modal correlation, it demands comparably fine-grained annotation effort 
+%for annotation 
+%of these fine-grained relationships 
+to model the cross-modal correlation.
+%which is challenging. 
+Researchers built fine-grained datasets to attend to information from each modality and use them in multimodal classification \cite{chen2015velda,henning2017estimating,otto2020characterization,zhang2018equal,kruk2019integrating,vempala2019categorizing}.
+
+
+\subsection{Knowledge Infusion in Multimodal Learning}
+\label{sec:knowledge-infusion-mm-learning}
+Large pretrained foundation models have become dominant paradigms in both vision and language (VL) modeling. Despite pretraining on large amounts of aligned VL data, usually from Conceptual Captions \cite{Sharma2018-qk}, COCO \cite{Ren2015-oq}, Visual Genome \cite{Krishna2017-xz}, and ImageNet \cite{deng2009imagenet} datasets, limitations persist in recent transformer-based approaches. They are restricted in the types of learned concepts and lack explicit information regarding commonsense knowledge, learning only surface-level characteristics.  For Language Understanding, researchers have recently employed knowledge-enhanced approaches using knowledge graphs for several tasks, including Language Modeling \cite{yasunaga2022deep,zhang2022greaselm,Logan2019-tk,Lu2021-xe,kursuncu2020kil}, Natural Language Inference (NLI) \cite{Ni2021-db}, Language Generation \cite{Yu2022-uv,peters2019knowledge}, E-BERT \cite{Wu2022-ah}, ERICA \cite{Qin2020-et} ERNIE \cite{Zhang2021-ov}, ERNIE-NLI \cite{Bauer2021-rv}, LUKE \cite{Yamada2020-zc}.  
+
+% \textcolor{red} {This paragraph is a total disaster---so bad I can't even begin to edit. 
+% Vision Understanding researchers have investigated tasks such as 
+Visual Commonsense Reasoning (VCR) 
+%was an area of interest to researchers to 
+appealed to researchers attempting to incorporate external knowledge in VLMs.  
+%where t
+They created a unified representation of scenes by merging scene graphs and structured information from ConceptNet to enhance visual understanding and explainable reasoning \cite{Zareian2020-vw,Pan2022-jd}. 
+%but mostly these works are based on  to show how 
+% Even these large pretrained models are semantically inconsistent and need to be trained with large KG models. 
+While the majority of the multimodal knowledge-enhanced 
+approaches were employed in prior work (e.g., for Visual Question Answering (VQA)) \cite{Garderes2020-gx,Marino2021-sn,Wu2022-lj}, they were limited to keyword-based entity matching to extract explicit knowledge. In another vein, representations of scenes for autonomous driving have been enhanced using knowledge-infused learning \cite{wickramarachchi2022knowledge,wickramarachchi2021knowledge}.
+%It can be also seen to reduce the hallucination models, 
+Further, as hallucination has been a significant limitation of LLMs, LVMs, and VLMs, researchers utilized knowledge-enhanced models to address this issue, again for VQA \cite{Chen2023-mf}. Our work differs from previous approaches in that we jointly reason over both implicit and explicit knowledge extracted through semantic search and infused into the model. 
+% unlike \cite{Gui2021-ax} implicitly as sometimes it is not enough for the model due to limited context length at the input. 
+% Hence after we extract semantically similar concepts 
+% %and  motivated by \cite{Kursuncu2019-ha} 
+% infusing knowledge in the model help the model learn contextually congruent and coherent representations of social media content inclusive of both modalities. 
+% This is in contrast to previous approaches that have focused on either implicit or explicit knowledge, or on single modalities. 
+% Our approach is more comprehensive and allows us to learn more accurate representations of social media content, measured 
+% %as can be seen with the 
+% by a reduction of Modality Gap.  This implies that the representations are consistent with the intended interpretation.
+% %context in which the content was created. 
+% %This is important because it allows us to better understand the meaning of the content and to use it in a variety of applications.
+
+\subsection{Modeling Crowdfunded Marketing Campaigns}
+\label{sec:modeling-social-media}
+Marketing materials are often generated to promote an entity (i.e., organization, product, person) and 
+%persuade the audience about the information being conveyed. 
+instigate audience action. Online platforms including social media and crowdfunding have been a focus area for marketing campaigns due to its reach to the masses in real time \cite{kursuncu2019predictive}. Crowdfunding platforms, such as Indiegogo and Kickstarter %are an effective way to reach the masses and seek
+seek venture capital from the general public.
+%contributions to fund their venture. 
+% \textcolor{red} {Disaster: 
+% similar to other cam-paigns (e.g., political campaigns), constitute a genre of strategic communication with readily measurable outcomes. The majority  of emerging brands originate as startups in crowdfunding platforms including Kickstarter and Indiegogo, as it is an effective way of reaching masses and seek contributions to finance their venture \cite{Carradini2023-ka}. 
+Between 2009 and 2023, over seven billion dollars have been pledged for the campaigns on Kickstarter. Some of the emerging brands such as Oculus \cite{Carradini2023-ka} originated from these platforms.
+% The success of any marketing campaigns depends on its ability to evolve with the changing needs of consumers, and to provide an engaging and informative experience. However, the complexity of such marketing campaigns poses a computation challenge for machine understanding. The benefit of a strategic approach for a crowdfunding project is demonstrated by the fact that many campaigns fail to obtain their funding goals.  For example, Kickstarter has currently a \%38.76 acceptance rate, which is the ratio of campaigns getting fully funded. Carradini et. al.\cite{Carradini2023-ka} %analyzed successful and unsuccessful campaigns and 
+These campaigns have a relatively low success rate. For instance, Carradini et al. \cite{Carradini2023-ka} 
+%analyzed successful and unsuccessful campaigns and  
+found that \%38.76 of the Kickstarter campaigns were fully funded relative to unsuccessful campaigns.   Successful campaigns featured more images and links. Yet, the majority of crowdfunding studies focused primarily on textual content, 
+%To the best of our knowledge, research on computational analysis of multimodal crowdfunding campaigns has been inadequate. 
+and often followed a more standard data science approach. 
+%using unimodal resources.
+%, specifically for success prediction of campaigns. 
+Researchers \cite{Mitra2014-ly} analyzed the textual data in Kickstarter campaigns, extracting linguistic features with phrases (i.e., n-grams) and other control variables using a logistic regression model. 
+%There have been very few research utilizing 
+Another study built models to characterize the persuasive strategies in crowdfunding (Kiva) campaigns using semi-supervised textual RNNs \cite{yang2019let}. This research topic of multimodal learning
+%approach for 
+specifically for modeling crowdfunding campaigns and their success has not received adequate attention from the researchers \cite{Palmieri2022-ch,Carradini2023-ka}. Researchers \cite{cheng2019success} developed one of the few predictive models for multimodal crowdfunding campaign success (MDL-TIM) (we use this model as a baseline ---see Section Methods---). 
+Because marketing campaigns are often multimodal, congruence in the promotional multimodal content is likely critical for effectiveness. The crowdfunding application provides an ideal domain for addressing the contextual congruence between modalities, providing both ample data and a measure of successful interpretation.
+%The general challenges in analyzing multimodal content also persist for crowdfunding campaigns including facilitating contextual congruence between modalities to capture the true meaning. 
+
+In contrast to the above approaches, we use commonsense knowledge to reduce the gap between modalities to 
+%helps in better 
+improve cross-modal congruence. Our work differentiates itself by utilizing both implicit (data-driven) and explicit (knowledge-driven) information fused in multimodal learning, which provides more contextually congruent representations and better performance in our downstream task.
+
+

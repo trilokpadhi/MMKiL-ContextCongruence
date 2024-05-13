@@ -1,0 +1,21 @@
+Multimodal marketing materials are often strategically designed to promote various entities, products, brands, or individuals, aiming to persuade an audience of their qualities and ultimately influence them to take action. For crowdfunding, this desired action is for users to commit as "backers," contributing financially to support the campaign before its deadline. The decision-making process for potential backers involves synthesizing and evaluating both textual and visual content, requiring an understanding of how these modalities interact. This multi-sensory input from different modalities requires forming cross-modal semantic connections to capture the holistic meaning. These semantic connections spanning both modalities facilitate a contextually congruent information environment that enhances cognitive processing, enabling humans to process information more efficiently and effectively \cite{laurienti2004semantic,spence2011crossmodal}, thus increasing the persuasiveness of the campaign message \cite{schubert2021multimodal}. 
+ 
+\vspace{-1em}
+\subsection{Cross-Modal Contextual Congruence}
+\label{sec:context-congruence}
+\vspace{-1mm}
+
+Contextual congruence refers to the associations between multiple sensory cues from different modalities known to enhance human response accuracy \cite{laurienti2004semantic,spence2011crossmodal}. Recent research suggests that contextual congruence in cross-modal space facilitates the selection and processing of semantically related information from different modalities \cite{almadori2021crossmodal,laurienti2004semantic,letts2022evaluating}. Capturing holistic meaning is essential for predicting human response to multimodal crowdfunding campaigns. However, multimodality challenges computational modeling, as the semantic cues span across modalities to construct meaning. 
+While the human brain adeptly forms these meaningful semantics connections between modalities, mimicking this capability for machines has been a complex issue. 
+Our approach aims to achieve this capability to discern contextual congruence by utilizing external knowledge from ConceptNet to enhance the multimodal data representations in learning. 
+
+\vspace{-2mm}
+\subsection{Dataset}
+\label{sec:dataset}
+\vspace{-1mm}
+
+We have chosen the Kickstarter crowdfunding platform for its promotional multimodal content, where we have a valid outcome measure with a relatively large N. We utilize a dataset from Web Robots \cite{robots2018kickstarter} that collects data on  Kickstarter campaigns including attributes such as categories, goals, amount funded, the backers count, country, project type, and project URLs, among others. The dataset will be made available and fully comply with the FAIR principles \cite{force11}.
+
+Kickstarter is an online crowdfunding platform where creators, entrepreneurs, designers, and artists, initiate promotional campaigns to seek resources for their creative projects in various categories. A campaigner introduces the concept behind their project in a project description. To back up their campaign, they frequently post videos, images, and text ads. Each project has a funding target with a deadline for a successful campaign. A project only receives the funds if it achieves or surpasses its funding target by the deadline going by the \textit{all-or-nothing} principle. 
+
+We chose a one-year time frame between June 2021 and May 2022, and randomly sampled 75,810 Kickstarter projects. A project is considered successful if it reaches its funding target by the deadline. Our binary outcome variable represents whether the project was successful or unsuccessful. In our dataset, 60.63\% were unsuccessful while 39.37\% were successful. 
